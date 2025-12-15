@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-// import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 import './styles/Auth.css';
 
-// interface LoginProps {
-//     onLoginSuccess: () => void;
-// }
+interface LoginProps {
+    onLoginSuccess: () => void;
+}
 
-// function Login({ onLoginSuccess }: LoginProps) {
-function Login() {
+function Login({ onLoginSuccess }: LoginProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    // const { auth, login } = useAuth();
+    const { auth, login } = useAuth();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,7 +20,7 @@ function Login() {
         }
 
         setIsLoading(true);
-        // login(username, password);
+        login(username, password);
 
         // Listen for auth change
         const timeout = setTimeout(() => {
@@ -31,19 +30,19 @@ function Login() {
         return () => clearTimeout(timeout);
     };
 
-    // React.useEffect(() => {
-    //     if (auth.isAuthenticated) {
-    //         setIsLoading(false);
-    //         onLoginSuccess();
-    //     }
-    // }, [auth.isAuthenticated, onLoginSuccess]);
+    React.useEffect(() => {
+        if (auth.isAuthenticated) {
+            setIsLoading(false);
+            onLoginSuccess();
+        }
+    }, [auth.isAuthenticated, onLoginSuccess]);
 
     return (
         <div className="auth-container">
             <div className="auth-card">
                 <h1 className="auth-title">Đăng Nhập</h1>
 
-                {/*{auth.error && <div className="auth-error">{auth.error}</div>}*/}
+                {auth.error && <div className="auth-error">{auth.error}</div>}
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">

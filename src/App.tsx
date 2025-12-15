@@ -1,14 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import { useAuth } from './hooks/useAuth';
+import Login from './components/Login';
+import ChatWindow from './components/ChatWindow';
 import './App.css';
-import Login from "./components/Login";
 
 function App() {
-  return (
-    <div className="App">
-      <Login></Login>
-    </div>
-  );
+    const { auth, logout } = useAuth();
+
+    if (!auth.isAuthenticated || !auth.username) {
+        return <Login onLoginSuccess={() => {}} />;
+    }
+
+    return (
+        <ChatWindow
+            username={auth.username}
+            onLogout={() => {
+                logout();
+            }}
+        />
+    );
 }
 
 export default App;
