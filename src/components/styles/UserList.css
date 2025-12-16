@@ -738,7 +738,6 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-```css
 /* src/styles/UserList.css */
 
 .user-list {
@@ -847,4 +846,3 @@ select.form-control {
     height: var(--space-6);
   }
 }
-```

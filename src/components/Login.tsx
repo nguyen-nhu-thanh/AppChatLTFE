@@ -1,48 +1,75 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import './styles/Auth.css';
 
 interface LoginProps {
-    onLoginSuccess: () => void;
+    mode?: 'login' | 'register';
+    onLogin?: (username: string, password: string) => void;
+    onRegister?: (username: string, password: string) => void;
 }
 
-function Login({ onLoginSuccess }: LoginProps) {
+function Login({mode = 'login', onLogin, onRegister }: LoginProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [currentMode, setCurrentMode] = useState<'login' | 'register'>(mode);
+    const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { auth, login } = useAuth();
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!username || !password) {
-            alert('Vui lòng điền đầy đủ thông tin');
+        setError('');
+
+        if (!username.trim() || !password.trim()) {
+            setError('Vui lòng điền đầy đủ thông tin');
+            return;
+        }
+
+        if (currentMode === 'register' && password !== confirmPassword) {
+            setError('Mật khẩu không khớp');
+            return;
+        }
+
+        if (password.length < 6) {
+            setError('Mật khẩu phải ít nhất 6 ký tự');
             return;
         }
 
         setIsLoading(true);
-        login(username, password);
 
-        // Listen for auth change
-        const timeout = setTimeout(() => {
+        try {
+            if (currentMode === 'login') {
+                onLogin?.(username, password);
+                // TODO: Chuyển hướng sang chat sau khi login thành công
+                // navigate(ROUTES.CHAT);
+            } else {
+                onRegister?.(username, password);
+                // TODO: Chuyển hướng sang login hoặc chat sau khi register thành công
+                // setCurrentMode('login');
+                // setPassword('');
+                // setConfirmPassword('');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Có lỗi xảy ra');
+        } finally {
             setIsLoading(false);
-        }, 3000);
-
-        return () => clearTimeout(timeout);
+        }
     };
 
-    React.useEffect(() => {
-        if (auth.isAuthenticated) {
-            setIsLoading(false);
-            onLoginSuccess();
-        }
-    }, [auth.isAuthenticated, onLoginSuccess]);
+    const switchMode = () => {
+        setCurrentMode(currentMode === 'login' ? 'register' : 'login');
+        setError('');
+        setPassword('');
+        setConfirmPassword('');
+        setUsername('');
+    };
 
     return (
         <div className="auth-container">
             <div className="auth-card">
-                <h1 className="auth-title">Đăng Nhập</h1>
-
-                {auth.error && <div className="auth-error">{auth.error}</div>}
+                <h1 className="auth-title">
+                    {currentMode === 'login' ? 'Đăng Nhập' : 'Đăng Ký'}
+                </h1>
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     <div className="form-group">
@@ -53,7 +80,6 @@ function Login({ onLoginSuccess }: LoginProps) {
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Nhập tên đăng nhập"
-                            disabled={isLoading}
                         />
                     </div>
 
@@ -65,20 +91,58 @@ function Login({ onLoginSuccess }: LoginProps) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Nhập mật khẩu"
-                            disabled={isLoading}
                         />
                     </div>
 
+                    {currentMode === 'register' && (
+                        <div className="form-group">
+                            <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Xác nhận mật khẩu"
+                                disabled={isLoading}
+                            />
+                        </div>
+                    )}
+
                     <button type="submit" className="auth-button" disabled={isLoading}>
-                        {isLoading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+                        {isLoading
+                            ? currentMode === 'login'
+                                ? 'Đang đăng nhập...'
+                                : 'Đang đăng ký...'
+                            : currentMode === 'login'
+                                ? 'Đăng Nhập'
+                                : 'Đăng Ký'}
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Chưa có tài khoản?{' '}
-                    <a href="#register" className="auth-link">
-                        Đăng ký ngay
-                    </a>
+                    {mode === 'login' ? (
+                        <>
+                            Chưa có tài khoản?{' '}
+                            <button
+                                type="button"
+                                className="auth-link"
+                                onClick={switchMode}
+                            >
+                                Đăng ký ngay
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            Đã có tài khoản?{' '}
+                            <button
+                                type="button"
+                                className="auth-link"
+                                onClick={switchMode}
+                            >
+                                Đăng nhập
+                            </button>
+                        </>
+                    )}
                 </p>
             </div>
         </div>
