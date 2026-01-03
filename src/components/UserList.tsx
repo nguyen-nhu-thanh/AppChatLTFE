@@ -3,14 +3,14 @@ import { User } from '../types/chat';
 import './styles/UserList.css';
 
 interface UserListProps {
-    users: User[];
+    users?: User[];  // 🔧 Thêm ?
     onSelectUser?: (username: string) => void;
 }
 
-function UserList({ users, onSelectUser }: UserListProps) {
+function UserList({ users = [], onSelectUser }: UserListProps) {  // 🔧 Default = []
     return (
         <div className="user-list">
-            {users.length === 0 ? (
+            {!users || users.length === 0 ?  (  // 🔧 Check null/undefined
                 <div className="empty-list">Chưa có người dùng nào</div>
             ) : (
                 users.map((user) => (
@@ -20,11 +20,11 @@ function UserList({ users, onSelectUser }: UserListProps) {
                         onClick={() => onSelectUser?.(user.username)}
                     >
                         <div className="user-status">
-              <span
-                  className={`status-indicator ${
-                      user.online ? 'online' : 'offline'
-                  }`}
-              />
+                            <span
+                                className={`status-indicator ${
+                                    user.online ? 'online' : 'offline'
+                                }`}
+                            />
                         </div>
                         <div className="user-name">{user.username}</div>
                     </div>

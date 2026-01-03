@@ -34,6 +34,16 @@ function ChatWindow({
     const [newUserName, setNewUserName] = useState('');
     const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
 
+    const handleTabChange = (newTab: 'rooms' | 'users') => {
+        setTab(newTab);
+        // Reset selections khi đổi tab
+        if (newTab === 'rooms') {
+            setNewUserName('');
+        } else {
+            setCurrentRoom(null);
+        }
+    };
+
     const handleCreateRoom = () => {
         if (!newRoomName.trim()) {
             alert('Vui lòng nhập tên phòng');
@@ -43,14 +53,16 @@ function ChatWindow({
         setNewRoomName('');
     };
 
-    const handleJoinRoom = (roomName: string) => {
-        setCurrentRoom({ id: roomName, name: roomName });
-        onJoinRoom?.(roomName);
-    };
-
     const handleSelectUser = (userName: string) => {
         setNewUserName(userName);
+        setCurrentRoom(null);  // 👈 THÊM DÒNG NÀY - Reset room khi chọn user
         onSelectUser?.(userName);
+    };
+
+    const handleJoinRoom = (roomName: string) => {
+        setCurrentRoom({ id: roomName, name:  roomName });
+        setNewUserName('');  // 👈 THÊM DÒNG NÀY - Reset user khi chọn room
+        onJoinRoom?.(roomName);
     };
 
     const handleSendMessage = (message: string) => {
@@ -79,7 +91,7 @@ function ChatWindow({
                 <div className="chat-tabs">
                     <button
                         className={`tab-btn ${tab === 'rooms' ? 'active' : ''}`}
-                        onClick={() => setTab('rooms')}
+                        onClick={() => handleTabChange('rooms')}
                     >
                         Phòng
                     </button>

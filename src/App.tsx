@@ -29,25 +29,25 @@ function App() {
                 setIsConnecting(true);
                 await wsService.connect();
 
-                // Thử re-login nếu có saved code
                 const savedCode = localStorage.getItem(RELOGIN_KEY);
                 const savedUsername = localStorage.getItem(USERNAME_KEY);
 
                 if (savedCode && savedUsername) {
+                    setCurrentUsername(savedUsername);
                     wsService.reLogin(savedUsername, savedCode);
                 } else {
                     setIsConnecting(false);
                 }
             } catch (err) {
                 console.error('Connection error:', err);
-                setError('Không thể kết nối server');
+                // 🔧 Thông báo rõ ràng hơn
+                setError('Server chat đang offline hoặc không thể kết nối.  Vui lòng thử lại sau.');
                 setIsConnecting(false);
             }
         };
 
         initConnection();
 
-        // Cleanup khi unmount
         return () => {
             wsService.disconnect();
         };
