@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Login from './components/Login';
 import ChatWindow from './components/ChatWindow';
 import { Message, Room, User } from './types/chat';
@@ -19,7 +19,12 @@ function App() {
     const [users, setUsers] = useState<User[]>([]);
     const [currentTarget, setCurrentTarget] = useState<{ type: 'room' | 'people'; name: string } | null>(null);
 
+    const hasConnected = useRef(false);
+
     useEffect(() => {
+        if (hasConnected.current) return;
+        hasConnected.current = true;
+
         const initConnection = async () => {
             try {
                 setIsConnecting(true);
@@ -36,7 +41,6 @@ function App() {
                 }
             } catch (err) {
                 console.error('Connection error:', err);
-                // 🔧 Thông báo rõ ràng hơn
                 setError('Server chat đang offline hoặc không thể kết nối.  Vui lòng thử lại sau.');
                 setIsConnecting(false);
             }
@@ -45,18 +49,28 @@ function App() {
         initConnection();
 
         return () => {
-            wsService.disconnect();
         };
     }, []);
 
     useEffect(() => {
-        // Xử lý login response
+        const handleBeforeUnload = () => {
+            wsService.disconnect();
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, []);
+
+    useEffect(() => {
         const handleLogin = (data: any) => {
             if (data.status === 'success') {
                 setIsLoggedIn(true);
                 setError('');
 
-                if (data.data?. RE_LOGIN_CODE) {
+                if (data.data?.RE_LOGIN_CODE) {
                     localStorage.setItem(RELOGIN_KEY, data.data.RE_LOGIN_CODE);
                     localStorage.setItem(USERNAME_KEY, currentUsername);
                 }
@@ -92,9 +106,9 @@ function App() {
         };
 
         const handleUserList = (data: any) => {
-            if (data. status === 'success' && data.data) {
-                const userList:  User[] = data.data. map((u: any, index: number) => ({
-                    id: String(index),
+            if (data.status === 'success' && data.data) {
+                const userList:  User[] = data.data.map((u: any, index: number) => ({
+                    id:  String(index),
                     username: u.name || u,
                     online: u.actionTime === 'online',
                 }));
@@ -103,11 +117,11 @@ function App() {
         };
 
         const handleNewMessage = (data: any) => {
-            if (data.event === 'SEND_CHAT' && data.status === 'success') {
+            if (data.event === 'SEND_CHAT') {
                 const newMsg: Message = {
-                    from: data.data?. from || data.data?.name,
+                    from: data.data?.from || data.data?.name,
                     to: data.data?.to,
-                    message: data.data?. mes,
+                    message: data.data?.mes,
                     timestamp: Date.now(),
                     type: data.data?.type || 'people',
                 };
@@ -122,9 +136,9 @@ function App() {
                     to: currentTarget?.name || '',
                     message: m.mes,
                     timestamp: new Date(m.createAt).getTime(),
-                    type: 'room' as const,
+                    type:  'room' as const,
                 }));
-                setMessages(messageList. reverse());
+                setMessages(messageList.reverse());
             }
         };
 
@@ -133,20 +147,19 @@ function App() {
                 const messageList: Message[] = (data.data || []).map((m: any) => ({
                     from: m.name,
                     to: currentTarget?.name || '',
-                    message: m.mes,
-                    timestamp: new Date(m. createAt).getTime(),
+                    message:  m.mes,
+                    timestamp: new Date(m.createAt).getTime(),
                     type: 'people' as const,
                 }));
                 setMessages(messageList.reverse());
             }
         };
 
-        const handleCreateRoom = (data: any) => {
+        const handleCreateRoom = (data:  any) => {
             if (data.status === 'success') {
-                // Thêm phòng mới vào list
                 const newRoom: Room = {
                     id: data.data?.name,
-                    name: data.data?. name,
+                    name: data.data?.name,
                 };
                 setRooms((prev) => [...prev, newRoom]);
             } else {
@@ -155,15 +168,14 @@ function App() {
         };
 
         const handleJoinRoom = (data: any) => {
-            if (data. status === 'success') {
-                // Load tin nhắn sau khi join thành công
+            if (data.status === 'success') {
                 if (currentTarget?.type === 'room') {
                     wsService.getRoomMessages(currentTarget.name);
                 }
             }
         };
 
-        wsService.on('RE_LOGIN', handleLogin);
+        wsService.on('RE_LOGIN', handleReLogin);
         wsService.on('AUTH', handleLogin);
         wsService.on('LOGIN', handleLogin);
         wsService.on('REGISTER', handleRegister);
@@ -188,12 +200,12 @@ function App() {
         };
     }, [currentTarget, currentUsername]);
 
-    const handleLogin = useCallback((username: string, password: string) => {
+    const handleLogin = useCallback((username:  string, password: string) => {
         setCurrentUsername(username);
         wsService.login(username, password);
     }, []);
 
-    const handleRegister = useCallback((username: string, password: string) => {
+    const handleRegister = useCallback((username: string, password:  string) => {
         wsService.register(username, password);
     }, []);
 
@@ -220,8 +232,8 @@ function App() {
     }, []);
 
     const handleSelectUser = useCallback((userName: string) => {
-        setCurrentTarget({ type: 'people', name: userName });
-        setMessages([]); // Clear messages
+        setCurrentTarget({ type: 'people', name:  userName });
+        setMessages([]);
         wsService.getPeopleMessages(userName);
     }, []);
 
@@ -232,7 +244,7 @@ function App() {
             const newMsg: Message = {
                 from: currentUsername,
                 to: to,
-                message: message,
+                message:  message,
                 timestamp: Date.now(),
                 type: type,
             };
