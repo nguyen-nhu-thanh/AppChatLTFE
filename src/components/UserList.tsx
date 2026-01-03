@@ -3,14 +3,14 @@ import { User } from '../types/chat';
 import './styles/UserList.css';
 
 interface UserListProps {
-    users?: User[];  // 🔧 Thêm ?
+    users?: User[];
     onSelectUser?: (username: string) => void;
 }
 
-function UserList({ users = [], onSelectUser }: UserListProps) {  // 🔧 Default = []
+function UserList({ users = [], onSelectUser }: UserListProps) {
     return (
         <div className="user-list">
-            {!users || users.length === 0 ?  (  // 🔧 Check null/undefined
+            {!users || users.length === 0 ?  (
                 <div className="empty-list">Chưa có người dùng nào</div>
             ) : (
                 users.map((user) => (

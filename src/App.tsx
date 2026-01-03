@@ -5,24 +5,20 @@ import { Message, Room, User } from './types/chat';
 import wsService from './services/websocketService';
 import './App.css';
 
-// Key để lưu re-login code
 const RELOGIN_KEY = 'chat_relogin_code';
 const USERNAME_KEY = 'chat_username';
 
 function App() {
-    // State quản lý trạng thái đăng nhập
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUsername, setCurrentUsername] = useState('');
     const [isConnecting, setIsConnecting] = useState(true);
     const [error, setError] = useState('');
 
-    // State quản lý dữ liệu chat
     const [messages, setMessages] = useState<Message[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [currentTarget, setCurrentTarget] = useState<{ type: 'room' | 'people'; name: string } | null>(null);
 
-    // Kết nối WebSocket khi app khởi động
     useEffect(() => {
         const initConnection = async () => {
             try {
@@ -53,7 +49,6 @@ function App() {
         };
     }, []);
 
-    // Đăng ký các event listeners
     useEffect(() => {
         // Xử lý login response
         const handleLogin = (data: any) => {
@@ -61,13 +56,11 @@ function App() {
                 setIsLoggedIn(true);
                 setError('');
 
-                // Lưu re-login code
                 if (data.data?. RE_LOGIN_CODE) {
                     localStorage.setItem(RELOGIN_KEY, data.data.RE_LOGIN_CODE);
                     localStorage.setItem(USERNAME_KEY, currentUsername);
                 }
 
-                // Lấy danh sách users sau khi login
                 wsService.getUserList();
             } else {
                 setError(data.mes || 'Đăng nhập thất bại');
@@ -75,7 +68,6 @@ function App() {
             setIsConnecting(false);
         };
 
-        // Xử lý re-login response
         const handleReLogin = (data: any) => {
             if (data.status === 'success') {
                 const savedUsername = localStorage.getItem(USERNAME_KEY);
@@ -85,14 +77,12 @@ function App() {
                     wsService.getUserList();
                 }
             } else {
-                // Xóa saved data nếu re-login fail
                 localStorage.removeItem(RELOGIN_KEY);
                 localStorage.removeItem(USERNAME_KEY);
             }
             setIsConnecting(false);
         };
 
-        // Xử lý register response
         const handleRegister = (data: any) => {
             if (data.status === 'success') {
                 alert('Đăng ký thành công!  Vui lòng đăng nhập.');
@@ -101,7 +91,6 @@ function App() {
             }
         };
 
-        // Xử lý danh sách users
         const handleUserList = (data: any) => {
             if (data. status === 'success' && data.data) {
                 const userList:  User[] = data.data. map((u: any, index: number) => ({
@@ -113,10 +102,8 @@ function App() {
             }
         };
 
-        // Xử lý tin nhắn mới
         const handleNewMessage = (data: any) => {
             if (data.event === 'SEND_CHAT' && data.status === 'success') {
-                // Server gửi tin nhắn mới
                 const newMsg: Message = {
                     from: data.data?. from || data.data?.name,
                     to: data.data?.to,
@@ -128,7 +115,6 @@ function App() {
             }
         };
 
-        // Xử lý tin nhắn room
         const handleRoomMessages = (data: any) => {
             if (data.status === 'success' && data.event === 'GET_ROOM_CHAT_MES') {
                 const messageList: Message[] = (data.data || []).map((m: any) => ({
@@ -138,11 +124,10 @@ function App() {
                     timestamp: new Date(m.createAt).getTime(),
                     type: 'room' as const,
                 }));
-                setMessages(messageList. reverse()); // Đảo lại để tin mới nhất ở cuối
+                setMessages(messageList. reverse());
             }
         };
 
-        // Xử lý tin nhắn people
         const handlePeopleMessages = (data: any) => {
             if (data.status === 'success' && data.event === 'GET_PEOPLE_CHAT_MES') {
                 const messageList: Message[] = (data.data || []).map((m: any) => ({
@@ -156,7 +141,6 @@ function App() {
             }
         };
 
-        // Xử lý create room
         const handleCreateRoom = (data: any) => {
             if (data.status === 'success') {
                 // Thêm phòng mới vào list
@@ -170,7 +154,6 @@ function App() {
             }
         };
 
-        // Xử lý join room
         const handleJoinRoom = (data: any) => {
             if (data. status === 'success') {
                 // Load tin nhắn sau khi join thành công
@@ -180,9 +163,8 @@ function App() {
             }
         };
 
-        // Đăng ký listeners
         wsService.on('RE_LOGIN', handleLogin);
-        wsService.on('AUTH', handleLogin); // Một số server dùng AUTH
+        wsService.on('AUTH', handleLogin);
         wsService.on('LOGIN', handleLogin);
         wsService.on('REGISTER', handleRegister);
         wsService.on('GET_USER_LIST', handleUserList);
@@ -192,9 +174,8 @@ function App() {
         wsService.on('CREATE_ROOM', handleCreateRoom);
         wsService.on('JOIN_ROOM', handleJoinRoom);
 
-        // Cleanup
         return () => {
-            wsService. off('RE_LOGIN');
+            wsService.off('RE_LOGIN');
             wsService.off('AUTH');
             wsService.off('LOGIN');
             wsService.off('REGISTER');
@@ -207,18 +188,15 @@ function App() {
         };
     }, [currentTarget, currentUsername]);
 
-    // Hàm xử lý đăng nhập
     const handleLogin = useCallback((username: string, password: string) => {
         setCurrentUsername(username);
         wsService.login(username, password);
     }, []);
 
-    // Hàm xử lý đăng ký
     const handleRegister = useCallback((username: string, password: string) => {
         wsService.register(username, password);
     }, []);
 
-    // Hàm xử lý đăng xuất
     const handleLogout = useCallback(() => {
         wsService.logout();
         localStorage.removeItem(RELOGIN_KEY);
@@ -231,31 +209,26 @@ function App() {
         setCurrentTarget(null);
     }, []);
 
-    // Hàm tạo phòng
     const handleCreateRoom = useCallback((roomName: string) => {
         wsService.createRoom(roomName);
     }, []);
 
-    // Hàm tham gia phòng
     const handleJoinRoom = useCallback((roomName: string) => {
         setCurrentTarget({ type: 'room', name: roomName });
         wsService.joinRoom(roomName);
         wsService.getRoomMessages(roomName);
     }, []);
 
-    // Hàm chọn người dùng để chat
     const handleSelectUser = useCallback((userName: string) => {
         setCurrentTarget({ type: 'people', name: userName });
         setMessages([]); // Clear messages
         wsService.getPeopleMessages(userName);
     }, []);
 
-    // Hàm gửi tin nhắn
     const handleSendMessage = useCallback(
         (type: 'room' | 'people', to:  string, message: string) => {
             wsService.sendMessage(type, to, message);
 
-            // Thêm tin nhắn vào local state ngay lập tức
             const newMsg: Message = {
                 from: currentUsername,
                 to: to,
@@ -268,7 +241,6 @@ function App() {
         [currentUsername]
     );
 
-    // Loading state
     if (isConnecting) {
         return (
             <div className="app-loading">
@@ -278,7 +250,6 @@ function App() {
         );
     }
 
-    // Render
     return (
         <div className="app">
             {!isLoggedIn ? (
