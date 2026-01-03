@@ -3,14 +3,14 @@ import { Room } from '../types/chat';
 import './styles/RoomList.css';
 
 interface RoomListProps {
-    rooms?:  Room[];  // 🔧 Thêm ?  để optional
+    rooms?:  Room[];
     onSelectRoom?:  (roomName: string) => void;
 }
 
-function RoomList({ rooms = [], onSelectRoom }: RoomListProps) {  // 🔧 Default = []
+function RoomList({ rooms = [], onSelectRoom }: RoomListProps) {
     return (
         <div className="room-list">
-            {! rooms || rooms.length === 0 ?  (  // 🔧 Check null/undefined
+            {! rooms || rooms.length === 0 ?  (
                 <div className="empty-list">Chưa có phòng nào</div>
             ) : (
                 rooms.map((room) => (

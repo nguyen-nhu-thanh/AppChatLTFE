@@ -36,7 +36,6 @@ function ChatWindow({
 
     const handleTabChange = (newTab: 'rooms' | 'users') => {
         setTab(newTab);
-        // Reset selections khi đổi tab
         if (newTab === 'rooms') {
             setNewUserName('');
         } else {
@@ -55,13 +54,13 @@ function ChatWindow({
 
     const handleSelectUser = (userName: string) => {
         setNewUserName(userName);
-        setCurrentRoom(null);  // 👈 THÊM DÒNG NÀY - Reset room khi chọn user
+        setCurrentRoom(null);
         onSelectUser?.(userName);
     };
 
     const handleJoinRoom = (roomName: string) => {
         setCurrentRoom({ id: roomName, name:  roomName });
-        setNewUserName('');  // 👈 THÊM DÒNG NÀY - Reset user khi chọn room
+        setNewUserName('');
         onJoinRoom?.(roomName);
     };
 

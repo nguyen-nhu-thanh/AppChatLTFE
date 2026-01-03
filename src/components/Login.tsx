@@ -40,14 +40,10 @@ function Login({mode = 'login', onLogin, onRegister }: LoginProps) {
         try {
             if (currentMode === 'login') {
                 onLogin?.(username, password);
-                // TODO: Chuyển hướng sang chat sau khi login thành công
-                // navigate(ROUTES.CHAT);
+
             } else {
                 onRegister?.(username, password);
-                // TODO: Chuyển hướng sang login hoặc chat sau khi register thành công
-                // setCurrentMode('login');
-                // setPassword('');
-                // setConfirmPassword('');
+
             }
         } catch (err: any) {
             setError(err.message || 'Có lỗi xảy ra');
