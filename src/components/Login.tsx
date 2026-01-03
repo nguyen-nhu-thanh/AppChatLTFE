@@ -108,6 +108,8 @@ function Login({mode = 'login', onLogin, onRegister }: LoginProps) {
                         </div>
                     )}
 
+                    {error && (<div className="auth-error">{error}</div>)}
+
                     <button type="submit" className="auth-button" disabled={isLoading}>
                         {isLoading
                             ? currentMode === 'login'
