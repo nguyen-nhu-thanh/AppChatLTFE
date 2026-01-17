@@ -19,7 +19,6 @@ export interface Message {
     type: 'room' | 'people';
 }
 
-// Thêm các response types từ server
 export interface LoginResponse {
     status: 'success' | 'error';
     event: 'RE_LOGIN' | 'LOGIN';

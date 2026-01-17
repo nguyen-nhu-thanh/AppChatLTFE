@@ -41,7 +41,7 @@ function App() {
                 }
             } catch (err) {
                 console.error('Connection error:', err);
-                setError('Server chat đang offline hoặc không thể kết nối.  Vui lòng thử lại sau.');
+                setError('Server chat đang offline');
                 setIsConnecting(false);
             }
         };
@@ -131,12 +131,21 @@ function App() {
 
         const handleRoomMessages = (data: any) => {
             if (data.status === 'success' && data.event === 'GET_ROOM_CHAT_MES') {
-                const messageList: Message[] = (data.data || []).map((m: any) => ({
+
+                const raw = data.data;
+
+                const list = Array.isArray(raw)
+                    ? raw
+                    : Array.isArray(raw?.list)
+                        ? raw.list
+                        : [];
+
+                const messageList: Message[] = list.map((m: any) => ({
                     from: m.name,
                     to: currentTarget?.name || '',
                     message: m.mes,
                     timestamp: new Date(m.createAt).getTime(),
-                    type:  'room' as const,
+                    type: 'room',
                 }));
                 setMessages(messageList.reverse());
             }
@@ -144,12 +153,21 @@ function App() {
 
         const handlePeopleMessages = (data: any) => {
             if (data.status === 'success' && data.event === 'GET_PEOPLE_CHAT_MES') {
-                const messageList: Message[] = (data.data || []).map((m: any) => ({
+
+                const raw = data.data;
+
+                const list = Array.isArray(raw)
+                    ? raw
+                    : Array.isArray(raw?.list)
+                        ? raw.list
+                        : [];
+
+                const messageList: Message[] = list.map((m: any) => ({
                     from: m.name,
                     to: currentTarget?.name || '',
-                    message:  m.mes,
+                    message: m.mes,
                     timestamp: new Date(m.createAt).getTime(),
-                    type: 'people' as const,
+                    type: 'people',
                 }));
                 setMessages(messageList.reverse());
             }
@@ -227,8 +245,9 @@ function App() {
 
     const handleJoinRoom = useCallback((roomName: string) => {
         setCurrentTarget({ type: 'room', name: roomName });
+
+        setMessages([]);
         wsService.joinRoom(roomName);
-        wsService.getRoomMessages(roomName);
     }, []);
 
     const handleSelectUser = useCallback((userName: string) => {
@@ -239,6 +258,10 @@ function App() {
 
     const handleSendMessage = useCallback(
         (type: 'room' | 'people', to:  string, message: string) => {
+            if (!currentTarget) {
+                alert('Bạn chưa chọn phòng hoặc người chat');
+                return;
+            }
             wsService.sendMessage(type, to, message);
 
             const newMsg: Message = {
@@ -250,7 +273,7 @@ function App() {
             };
             setMessages((prev) => [...prev, newMsg]);
         },
-        [currentUsername]
+        [currentTarget, currentUsername]
     );
 
     if (isConnecting) {
